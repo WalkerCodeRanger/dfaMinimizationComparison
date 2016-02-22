@@ -1,3 +1,4 @@
+/* Code below reproduced from "Fast brief practical DFA minimization" by Antti Valmari (2011) */
 #include <iostream>
 #include <algorithm>
 /* Refinable partition */

@@ -8,7 +8,7 @@ The format consists of three sections, a header, a list of transitions and a lis
 
 ## Header
 
-The header consists of a single line of four space separated non-negative integers.  The first number is the number of states in the DFA. Remember states are numbered starting at zero up to 1 less than the number of states. The second is the number of transitions in the DFA.  The third is the label of the initial or start state of the DFA.  The fourth is number of final states in the DFA.
+The header consists of a single line of four space separated non-negative integers.  The first number is the number of states in the DFA. Remember states are numbered starting at zero up to 1 less than the number of states. The second is the number of transitions in the DFA.  The third is the label of the initial or start state of the DFA.  The fourth is the number of final states in the DFA.
 
 For example, a DFA with 5 states, 6 transitions, initial state 0 and 2 final states would have the header:
 
@@ -16,7 +16,7 @@ For example, a DFA with 5 states, 6 transitions, initial state 0 and 2 final sta
 
 ## Transitions
 
-The transitions sections consists of a number of transition lines equal to the number of transitions given in the header.  Each line consists of three space separated integers.  The first is the label for the state begin transitioned from (i.e. the head).  The second is the label of the input to transition on.  The third is the label of the state to transition to (i.e. the tail.
+The transitions sections consists of a number of transition lines equal to the number of transitions given in the header.  Each line consists of three space separated integers.  The first is the label for the state being transitioned from (i.e. the head).  The second is the label of the input to transition on.  The third is the label of the state to transition to (i.e. the tail).
 
 For example, a transition from state 1 to state 3 on input 2 would be:
 

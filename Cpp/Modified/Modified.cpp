@@ -1,3 +1,4 @@
+/* Code below heavily adapted from code provided in "Fast brief practical DFA minimization" by Antti Valmari (2011) */
 #include <iostream>
 #include <algorithm>
 
