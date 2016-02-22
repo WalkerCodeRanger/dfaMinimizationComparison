@@ -3,4 +3,7 @@
   <PropertyGroup>
     <ProjectView>ShowAllFiles</ProjectView>
   </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Debug|AnyCPU'">
+    <StartArguments>&lt; C:\data\projects\dfaMinComparison\TestData\Sample.dfa &gt; C:\data\projects\dfaMinComparison\Results\Sample.CSharp.min.dfa</StartArguments>
+  </PropertyGroup>
 </Project>

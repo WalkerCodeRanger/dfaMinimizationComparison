@@ -7,7 +7,7 @@ namespace DfaMinComparisonCSharp.CSharp
 	{
 		public static void Main(string[] args)
 		{
-			// Reader Header
+			// Read Header
 			var header = Console.ReadLine().Split();
 			var stateCount = int.Parse(header[0]);
 			var transitionCount = int.Parse(header[1]);
@@ -22,13 +22,13 @@ namespace DfaMinComparisonCSharp.CSharp
 			{
 				var transition = Console.ReadLine().Split();
 				var fromState = int.Parse(transition[0]);
-				var input = int.Parse(transition[0]);
-				var toState = int.Parse(transition[0]);
+				var input = int.Parse(transition[1]);
+				var toState = int.Parse(transition[2]);
 				dfa.AddTransition(fromState, input, toState);
 			}
 
 			// Read Final States
-			for(int i = 0; i < finalStateCount; i++)
+			for(var i = 0; i < finalStateCount; i++)
 			{
 				var state = int.Parse(Console.ReadLine());
 				dfa.SetFinal(state);
