@@ -99,23 +99,24 @@ bool cmp(int i, int j)
 }
 
 /* Adjacent transitions */
-int *A, *F;
+int* Adjacent;
+int* Offset;
 void make_adjacent(int K[])
 {
 	int q, t;
 	for (q = 0; q <= stateCount; ++q)
 	{
-		F[q] = 0;
+		Offset[q] = 0;
 	}
 	for (t = 0; t < transitionCount; ++t)
 	{
-		++F[K[t]];
+		++Offset[K[t]];
 	}
 	for (q = 0; q < stateCount; ++q)
-		F[q + 1] += F[q];
+		Offset[q + 1] += Offset[q];
 	for (t = transitionCount; t--; )
 	{
-		A[--F[K[t]]] = t;
+		Adjacent[--Offset[K[t]]] = t;
 	}
 }
 
@@ -133,25 +134,23 @@ inline void reach(int q)
 	}
 }
 
-void rem_unreachable(int T[], int H[])
+void rem_unreachable(int tail[], int head[])
 {
-	make_adjacent(T);
+	make_adjacent(tail);
 	int i, j;
 	for (i = 0; i < rr; ++i)
 	{
-		for (j = F[Blocks.elements[i]]; j < F[Blocks.elements[i] + 1]; ++j)
-		{
-			reach(H[A[j]]);
-		}
+		for (j = Offset[Blocks.elements[i]]; j < Offset[Blocks.elements[i] + 1]; ++j)
+			reach(head[Adjacent[j]]);
 	}
 	j = 0;
 	for (int t = 0; t < transitionCount; ++t)
 	{
-		if (Blocks.location[T[t]] < rr)
+		if (Blocks.location[tail[t]] < rr)
 		{
-			H[j] = H[t];
+			head[j] = head[t];
 			transitionLabel[j] = transitionLabel[t];
-			T[j] = T[t];
+			tail[j] = tail[t];
 			++j;
 		}
 	}
@@ -169,8 +168,8 @@ int main()
 	transitionLabel = new int[transitionCount];
 	transitionHead = new int[transitionCount];
 	Blocks.init(stateCount);
-	A = new int[transitionCount];
-	F = new int[stateCount + 1];
+	Adjacent = new int[transitionCount];
+	Offset = new int[stateCount + 1];
 	/* Read transitions */
 	for (int t = 0; t < transitionCount; ++t)
 	{
@@ -237,9 +236,9 @@ int main()
 		{
 			for (i = Blocks.first[b]; i < Blocks.past[b]; ++i)
 			{
-				for (j = F[Blocks.elements[i]]; j < F[Blocks.elements[i] + 1]; ++j)
+				for (j = Offset[Blocks.elements[i]]; j < Offset[Blocks.elements[i] + 1]; ++j)
 				{
-					Cords.mark(A[j]);
+					Cords.mark(Adjacent[j]);
 				}
 			}
 			Cords.split(); ++b;
