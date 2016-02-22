@@ -1,0 +1,4 @@
+[package]
+name = "dfa_min_comparison_rust"
+version = "0.1.0"
+authors = ["Jeff Walker Code Ranger <Jeff@WalkerCodeRanger.com>"]

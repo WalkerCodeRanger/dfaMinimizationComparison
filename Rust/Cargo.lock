@@ -1,0 +1,4 @@
+[root]
+name = "dfa_min_comparison_rust"
+version = "0.1.0"
+
