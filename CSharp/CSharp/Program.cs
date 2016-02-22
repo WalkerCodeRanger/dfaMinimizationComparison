@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 
 namespace DfaMinComparisonCSharp.CSharp
@@ -31,20 +32,20 @@ namespace DfaMinComparisonCSharp.CSharp
 			for(var i = 0; i < finalStateCount; i++)
 			{
 				var state = int.Parse(Console.ReadLine());
-				dfa.SetFinal(state);
+				dfa.AddFinalState(state);
 			}
 
 			var minDfa = dfa.Minimize();
 
 			// Print Results
-			var finalStates = minDfa.States.Where(s => minDfa.IsFinal(s)).ToList();
+
 			// Header
-			Console.WriteLine($"{minDfa.StateCount} {minDfa.Transitions.Count} {minDfa.StartState} {finalStates.Count}");
+			Console.WriteLine($"{minDfa.StateCount} {minDfa.Transitions.Count} {minDfa.StartState} {minDfa.FinalStates.Count}");
 			// Transitions
 			foreach(var transition in minDfa.Transitions)
 				Console.WriteLine($"{transition.From} {transition.OnInput} {transition.To}");
 			// Final States
-			foreach(var finalState in finalStates)
+			foreach(var finalState in minDfa.FinalStates)
 				Console.WriteLine(finalState);
 		}
 	}

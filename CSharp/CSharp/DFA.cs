@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 
@@ -8,23 +7,27 @@ namespace DfaMinComparisonCSharp.CSharp
 	public class DFA
 	{
 		private readonly List<Transition> transitions = new List<Transition>();
-		private readonly BitArray stateIsFinal;
+		private readonly HashSet<int> finalStates = new HashSet<int>();
 
 		public DFA(int stateCount, int startState)
 		{
 			StateCount = stateCount;
-			stateIsFinal = new BitArray(stateCount);
 			StartState = startState;
 		}
 
-		public IReadOnlyList<Transition> Transitions => transitions;
 		public int StateCount { get; }
 		public int StartState { get; }
+		public IReadOnlyList<Transition> Transitions => transitions;
+		public IReadOnlyCollection<int> FinalStates => finalStates;
 		public IEnumerable<int> States => Enumerable.Range(0, StateCount).Select(i => i);
 
 		public void AddTransition(int fromState, int onInput, int toState)
 		{
 			transitions.Add(new Transition(fromState, onInput, toState));
+		}
+		public void AddFinalState(int state)
+		{
+			finalStates.Add(state);
 		}
 
 		public DFA Minimize()
@@ -37,7 +40,6 @@ namespace DfaMinComparisonCSharp.CSharp
 			DiscardNotReachable(blocks, transitions, t => t.From, t => t.To);
 
 			// Reachable from final
-			var finalStates = States.Where(IsFinal).ToList();
 			foreach(var finalState in finalStates)
 				blocks.Mark(finalState);
 
@@ -81,8 +83,8 @@ namespace DfaMinComparisonCSharp.CSharp
 			// Set Final States
 			for(var set = 0; set < blocks.SetCount; set++)
 				// Sets are either all final or non-final states
-				if(IsFinal(blocks.SomeElementOf(set)))
-					minDFA.SetFinal(set);
+				if(finalStates.Contains(blocks.SomeElementOf(set)))
+					minDFA.AddFinalState(set);
 
 			// Create transitions
 			for(var set = 0; set < cords.SetCount; set++)
@@ -107,16 +109,6 @@ namespace DfaMinComparisonCSharp.CSharp
 			blocks.DiscardUnmarked();
 
 			transitionList.RemoveAll(transition => blocks.SetOf(getFrom(transition)) == -1);
-		}
-
-		public void SetFinal(int state, bool isFinal = true)
-		{
-			stateIsFinal[state] = isFinal;
-		}
-
-		public bool IsFinal(int state)
-		{
-			return stateIsFinal[state];
 		}
 	}
 }
