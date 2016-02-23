@@ -12,10 +12,10 @@ Clone this git repo. Compile solutions using Visual Studio 2015. Compile Rust pr
 ## Explanation of this Project
 This project implements a [DFA minimization algorithm](Valmari12.pdf) in C++, C# and Rust in order to evaluate Rust as compared to the other languages.  Four versions of the algorithm are included.  They are:
 
-	1. [C++ Original](Cpp/Original/Original.cpp) - the algorithm implementation as presented in the [paper](Valmari12.pdf) by Valmari (2011)
-	2. [C++ Modified](Cpp/Modified/Modified.cpp) - a C++ version modified to improve clarity and readability
-	3. [C#](CSharp/CSharp/)
-	4. [Rust](Rust/src/)
+  1. [C++ Original](Cpp/Original/Original.cpp) - the algorithm implementation as presented in the [paper](Valmari12.pdf) by Valmari (2011)
+  2. [C++ Modified](Cpp/Modified/Modified.cpp) - a C++ version modified to improve clarity and readability
+  3. [C#](CSharp/CSharp/)
+  4. [Rust](Rust/src/)
 
 All versions accept input on the console in the [input format](dfaFormat.md) used by the original version from the paper and write their results to the console in the same version.  [Sample DFA files](TestData/) are included in the project.
 
@@ -45,30 +45,30 @@ Based on my experience writing this version of the algorithm, a formed the follo
 
 **Pros:**
 
-	* Type inference! especially on certain generic parameters
-	* Warnings about naming standards
-	* For loop syntax and always using iterators and ranges for loops
-	* Can use `_` in place of unneeded for loop variable name
-	* Can safely return immutable references to parts of a struct's internal structure
-	* Strict typing with `usize` pushed me to good design, changing `Partition.set_of` into `Vec<Option<usize>>`
+  * Type inference! especially on certain generic parameters
+  * Warnings about naming standards
+  * For loop syntax and always using iterators and ranges for loops
+  * Can use `_` in place of unneeded for loop variable name
+  * Can safely return immutable references to parts of a struct's internal structure
+  * Strict typing with `usize` pushed me to good design, changing `Partition.set_of` into `Vec<Option<usize>>`
 
 **Cons:**
 
-	* Compiler error messages are confusing
-	* Compiler not good at producing all errors after encountering other errors
-	* Returning iterators, "There be dragons here" (see comments below)
-	* Can't make struct fields immutable (this would enforce invariants)
-	* Unit of encapsulation is the module rather than the struct, for example can't enforce the use of a `new` constructor inside the module the struct is declared in
-	* Standard library naming is unintuitive to me, i.e. Vec::push instead of Vec::add and Vec::retain instead of Vec::remove or Vec::remove_all or Vec::remove_where
-	* No interpolated strings
-	* `String` vs `&str` (see comments below)
-	* Lifetimes extend to end of scope, not just last use (see comments below)
-	* Feels awkward to use `usize` for things like states that aren't sizes. Perhaps needs a different name?
-	* Dislike the coupling of files to modules
-	* "Stolen" values (see comments below)
-	* Don't have editor with really good completion, coloring etc. like Visual Studio
-	* Don't have refactoring tool like with Resharper
-	* Miss being able to omit curly braces on if, else, for etc.
+  * Compiler error messages are confusing
+  * Compiler not good at producing all errors after encountering other errors
+  * Returning iterators, "There be dragons here" (see comments below)
+  * Can't make struct fields immutable (this would enforce invariants)
+  * Unit of encapsulation is the module rather than the struct, for example can't enforce the use of a `new` constructor inside the module the struct is declared in
+  * Standard library naming is unintuitive to me, i.e. `Vec::push` instead of `Vec::add` and `Vec::retain` instead of `Vec::remove` or `Vec::remove_all` or `Vec::remove_where`
+  * No interpolated strings
+  * `String` vs `&str` (see comments below)
+  * Lifetimes extend to end of scope, not just last use (see comments below)
+  * Feels awkward to use `usize` for things like states that aren't sizes. Perhaps needs a different name?
+  * Dislike the coupling of files to modules
+  * "Stolen" values (see comments below)
+  * Don't have editor with really good completion, coloring etc. like Visual Studio
+  * Don't have refactoring tool like with Resharper
+  * Miss being able to omit curly braces on if, else, for etc.
 
 #### Returning iterators
 In several places I wanted to return an iterator from a function (for example in `PartitionMarking.marked`).  This is something I do quite commonly in C#.  There appear to be several language limitations that are interacting poorly to make this very difficult.  I can't honestly say I understand all the issues.  However, there is discussion on stack overflow [here](http://stackoverflow.com/questions/31904842/return-a-map-iterator-which-is-using-a-closure-in-rust) and [here](http://stackoverflow.com/questions/27646925/how-do-i-return-a-filter-iterator-from-a-function).  The accepted work around seems to be to return a `Box<Iterator<...>...>`.  That of course introduces extra heap allocation and pointers.  However, I wasn't even able to get that solution working due to lifetime issues.  I ended up `.collect()`ing the values into a `Vec<usize>` and returning that.  Which is apparently a common though even uglier workaround.  It seems one of the [issues](https://github.com/rust-lang/rfcs/issues/518) is that there is no way to return an "abstract" type from a function.  So it becomes necessary to return a very specific concrete type of iterator that then leaks information about the implementation of your function.  There is an [RFC](https://github.com/Kimundi/rfcs/blob/function_output_type_parameters/text/0000-function_output_type_parameters.md) and [pull request](https://github.com/rust-lang/rfcs/pull/1305) on this.  The other problem seems to revolve around the complexities of the lifetimes necessary for this to work.  I still need to dig into that issue more.
