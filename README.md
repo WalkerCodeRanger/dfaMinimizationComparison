@@ -21,11 +21,11 @@ All versions accept input on the console in the [input format](dfaFormat.md) use
 
 ## Commentary on Languages
 
-### Original
+### C++ Original
 
 This version is an exact copy of the version provided in the paper.  The variable names are almost all a single letter.  Many lines are combined into a single line and other long lines are split into multiple lines.  The author states this was done to minimize the total length of the paper and make the code fit into the narrow columns of the publication.
 
-### Modified
+### C++ Modified
 
 This is a modification of the version provided in the paper.  The fundamental structure of the code is unchanged.  Most C++ idioms and optimizations are unchanged.  Variable names have been changed.  Combined lines have been split back out.  Split lines have been restored.  While some comments have been added, it is still not well commented.
 
@@ -43,7 +43,8 @@ This project was really created to evaluate the Rust language.  As such, the Rus
 
 Based on my experience writing this version of the algorithm, a formed the following opinions about the pros and cons of the Rust programming language.
 
-Pros:
+**Pros:**
+
 	* Type inference! especially on certain generic parameters
 	* Warnings about naming standards
 	* For loop syntax and always using iterators and ranges for loops
@@ -51,7 +52,8 @@ Pros:
 	* Can safely return immutable references to parts of a struct's internal structure
 	* Strict typing with `usize` pushed me to good design, changing `Partition.set_of` into `Vec<Option<usize>>`
 
-Cons:
+**Cons:**
+
 	* Compiler error messages are confusing
 	* Compiler not good at producing all errors after encountering other errors
 	* Returning iterators, "There be dragons here" (see comments below)
