@@ -20,7 +20,7 @@ namespace DfaMinComparisonCSharp.CSharp
 
 		// For simplicity we do not share the next to data structures
 		private readonly int[] marked; // M[s] the number of marked elements in set s
-		private readonly Stack<int> touched; // W touched (i.e. contain marked) sets, replaces W[] and w in the paper
+		private readonly List<int> touched; // W touched (i.e. contain marked) sets, replaces W[] and w in the paper
 
 		public Partition(int elementCount)
 		{
@@ -30,7 +30,7 @@ namespace DfaMinComparisonCSharp.CSharp
 			first = new int[elementCount];
 			past = new int[elementCount];
 			marked = new int[elementCount];
-			touched = new Stack<int>(elementCount); // capacity so we never have to worry about resize
+			touched = new List<int>(elementCount); // capacity so we never have to worry about resize
 
 			for(var i = 0; i < elementCount; ++i)
 				elements[i] = location[i] = i;
@@ -51,19 +51,19 @@ namespace DfaMinComparisonCSharp.CSharp
 		{
 			var set = setOf[element];
 			if(set == -1) return; // not in any set
-			var i = location[element];
+			var elementIndex = location[element];
 			var firstUnmarked = first[set] + marked[set];
-			if(i < firstUnmarked) return; // already marked
+			if(elementIndex < firstUnmarked) return; // already marked
 
 			// swap element and the first unmarked in elements, updating location appropriately
-			elements[i] = elements[firstUnmarked];
-			location[elements[i]] = i;
+			elements[elementIndex] = elements[firstUnmarked];
+			location[elements[elementIndex]] = elementIndex;
 			elements[firstUnmarked] = element;
 			location[element] = firstUnmarked;
 
 			// track how many marked in the set, and if it was touched.
 			if(marked[set]++ == 0)
-				touched.Push(set);
+				touched.Add(set);
 		}
 
 		/// <summary>
@@ -71,9 +71,8 @@ namespace DfaMinComparisonCSharp.CSharp
 		/// </summary>
 		public void SplitSets()
 		{
-			while(touched.Count > 0)
+			foreach(var set in touched)
 			{
-				var set = touched.Pop();
 				var firstUnmarked = first[set] + marked[set];
 
 				// if the whole set was marked
@@ -107,6 +106,7 @@ namespace DfaMinComparisonCSharp.CSharp
 				// increase set count
 				setCount++;
 			}
+			touched.Clear();
 		}
 
 		/// <summary>
@@ -114,9 +114,8 @@ namespace DfaMinComparisonCSharp.CSharp
 		/// </summary>
 		public void DiscardUnmarked()
 		{
-			while(touched.Count > 0)
+			foreach(var set in touched)
 			{
-				var set = touched.Pop();
 				var firstUnmarked = first[set] + marked[set];
 
 				// if the whole set was marked
@@ -137,6 +136,7 @@ namespace DfaMinComparisonCSharp.CSharp
 				// clear mark on set
 				marked[set] = 0;
 			}
+			touched.Clear();
 		}
 
 		public IEnumerable<int> Marked(int set)
@@ -164,17 +164,17 @@ namespace DfaMinComparisonCSharp.CSharp
 			setCount = marked[0] = 0;
 
 			// Sort them by the partition func so they will be together
-			var paritition = elements.Select(partitionFunc).ToArray();
-			Array.Sort(paritition, elements);
+			var partition = elements.Select(partitionFunc).ToArray();
+			Array.Sort(partition, elements);
 
 			// Create sets for each partition
-			var currentPartition = paritition[0];
+			var currentPartition = partition[0];
 			for(var i = 0; i < elements.Length; ++i)
 			{
 				var element = elements[i];
-				if(paritition[i] != currentPartition)
+				if(partition[i] != currentPartition)
 				{
-					currentPartition = paritition[i];
+					currentPartition = partition[i];
 					past[setCount++] = i;
 					first[setCount] = i;
 					marked[setCount] = 0;

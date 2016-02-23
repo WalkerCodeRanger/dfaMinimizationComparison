@@ -2,4 +2,5 @@ Debug/
 .vs/
 *.VC.opendb
 *.sdf
+*.user
 Results/

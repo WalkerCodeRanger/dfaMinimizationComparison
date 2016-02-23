@@ -22,16 +22,16 @@ namespace DfaMinComparisonCSharp.CSharp
 				offset[state + 1] += offset[state];
 
 			// Place transitions, and correct offsets
-			for(var t = transitions.Count - 1; t >= 0; t--)
-				adjacent[--offset[getState(transitions[t])]] = t;
+			for(var transition = transitions.Count - 1; transition >= 0; transition--)
+				adjacent[--offset[getState(transitions[transition])]] = transition;
 		}
 
 		public IEnumerable<int> this[int state]
 		{
 			get
 			{
-				for(var j = offset[state]; j < offset[state + 1]; ++j)
-					yield return adjacent[j];
+				for(var transition = offset[state]; transition < offset[state + 1]; ++transition)
+					yield return adjacent[transition];
 			}
 		}
 	}

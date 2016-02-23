@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
 
 namespace DfaMinComparisonCSharp.CSharp
 {
@@ -19,7 +18,6 @@ namespace DfaMinComparisonCSharp.CSharp
 		public int StartState { get; }
 		public IReadOnlyList<Transition> Transitions => transitions;
 		public IReadOnlyCollection<int> FinalStates => finalStates;
-		public IEnumerable<int> States => Enumerable.Range(0, StateCount).Select(i => i);
 
 		public void AddTransition(int fromState, int onInput, int toState)
 		{
@@ -32,6 +30,9 @@ namespace DfaMinComparisonCSharp.CSharp
 
 		public DFA Minimize()
 		{
+			// We will be modifying this list of transitions and we don't want to mess up our own
+			var transitions = new List<Transition>(this.transitions);
+
 			var blocks = new Partition(StateCount);
 
 			// Reachable from start
@@ -54,7 +55,7 @@ namespace DfaMinComparisonCSharp.CSharp
 			// Cords partition to manage transitions
 			var cords = new Partition(transitions.Count);
 
-			// Sort transitions by input
+			// Split transitions by input
 			cords.PartitionBy(transition => transitions[transition].OnInput);
 
 			//Split blocks and cords
@@ -98,17 +99,17 @@ namespace DfaMinComparisonCSharp.CSharp
 			return minDFA;
 		}
 
-		private void DiscardNotReachable(Partition blocks, List<Transition> transitionList, Func<Transition, int> getFrom, Func<Transition, int> getTo)
+		private void DiscardNotReachable(Partition blocks, List<Transition> transitions, Func<Transition, int> getFrom, Func<Transition, int> getTo)
 		{
-			var adjacentTransitions = new AdjacentTransitions(StateCount, transitionList, getFrom);
+			var adjacentTransitions = new AdjacentTransitions(StateCount, transitions, getFrom);
 
 			foreach(var state in blocks.Marked(0))
 				foreach(var transition in adjacentTransitions[state])
-					blocks.Mark(getTo(transitionList[transition]));
+					blocks.Mark(getTo(transitions[transition]));
 
 			blocks.DiscardUnmarked();
 
-			transitionList.RemoveAll(transition => blocks.SetOf(getFrom(transition)) == -1);
+			transitions.RemoveAll(transition => blocks.SetOf(getFrom(transition)) == -1);
 		}
 	}
 }

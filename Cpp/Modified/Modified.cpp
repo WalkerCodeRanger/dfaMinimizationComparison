@@ -4,10 +4,10 @@
 
 /* Refinable partition */
 // These two structures are shared by both instances of partition, saving memory
-int* Marked; // Marked[s] the number of marked elements in set s
-int* Touched; // touched (i.e. contain marked) sets
+int* marked; // Marked[s] the number of marked elements in set s
+int* touched; // touched (i.e. contain marked) sets
 int touchedCount = 0; // temporary worksets
-struct partition
+struct Partition
 {
 	int setCount; // z - the number of sets
 	int* elements;
@@ -41,15 +41,15 @@ struct partition
 		// swap element with the first unmarked
 		int set = setOf[element];
 		int i = location[element];
-		int j = first[set] + Marked[set];
+		int j = first[set] + marked[set];
 		elements[i] = elements[j];
 		location[elements[i]] = i;
 		elements[j] = element;
 		location[element] = j;
 		// increment the number of marked and add to touched if needed
-		if (!Marked[set]++)
+		if (!marked[set]++)
 		{
-			Touched[touchedCount++] = set;
+			touched[touchedCount++] = set;
 		}
 	}
 
@@ -57,14 +57,14 @@ struct partition
 	{
 		while (touchedCount)
 		{
-			int set = Touched[--touchedCount];
-			int j = first[set] + Marked[set];
+			int set = touched[--touchedCount];
+			int j = first[set] + marked[set];
 			if (j == past[set])
 			{
-				Marked[set] = 0;
+				marked[set] = 0;
 				continue;
 			}
-			if (Marked[set] <= past[set] - j)
+			if (marked[set] <= past[set] - j)
 			{
 				first[setCount] = first[set];
 				past[setCount] = first[set] = j;
@@ -78,14 +78,14 @@ struct partition
 			{
 				setOf[elements[i]] = setCount;
 			}
-			Marked[setCount++] = 0;
-			Marked[set] = 0;
+			marked[setCount++] = 0;
+			marked[set] = 0;
 		}
 	}
 };
 
-partition Blocks; // blocks (consist of states)
-partition Cords; // cords (consist of transitions)
+Partition Blocks; // blocks (consist of states)
+Partition Cords; // cords (consist of transitions)
 int stateCount; // number of states
 int transitionCount; // number of transitions
 int finalStatesCount; // number of final states
@@ -99,38 +99,34 @@ bool cmp(int i, int j)
 }
 
 /* Adjacent transitions */
-int* Adjacent;
-int* Offset;
-void make_adjacent(int K[])
+int* adjacent;
+int* offset;
+void make_adjacent(int states[])
 {
-	int q, t;
-	for (q = 0; q <= stateCount; ++q)
-	{
-		Offset[q] = 0;
-	}
-	for (t = 0; t < transitionCount; ++t)
-	{
-		++Offset[K[t]];
-	}
-	for (q = 0; q < stateCount; ++q)
-		Offset[q + 1] += Offset[q];
-	for (t = transitionCount; t--; )
-	{
-		Adjacent[--Offset[K[t]]] = t;
-	}
+	for (int state = 0; state <= stateCount; ++state)
+		offset[state] = 0;
+
+	for (int transition = 0; transition < transitionCount; ++transition)
+		++offset[states[transition]];
+
+	for (int state = 0; state < stateCount; ++state)
+		offset[state + 1] += offset[state];
+
+	for (int transition = transitionCount; transition--; )
+		adjacent[--offset[states[transition]]] = transition;
 }
 
 /* Removal of irrelevant parts */
 int rr = 0; // number of reached states
-inline void reach(int q)
+inline void reach(int state)
 {
-	int i = Blocks.location[q];
+	int i = Blocks.location[state];
 	if (i >= rr)
 	{
 		Blocks.elements[i] = Blocks.elements[rr];
 		Blocks.location[Blocks.elements[i]] = i;
-		Blocks.elements[rr] = q;
-		Blocks.location[q] = rr++;
+		Blocks.elements[rr] = state;
+		Blocks.location[state] = rr++;
 	}
 }
 
@@ -140,8 +136,8 @@ void rem_unreachable(int tail[], int head[])
 	int i, j;
 	for (i = 0; i < rr; ++i)
 	{
-		for (j = Offset[Blocks.elements[i]]; j < Offset[Blocks.elements[i] + 1]; ++j)
-			reach(head[Adjacent[j]]);
+		for (j = offset[Blocks.elements[i]]; j < offset[Blocks.elements[i] + 1]; ++j)
+			reach(head[adjacent[j]]);
 	}
 	j = 0;
 	for (int t = 0; t < transitionCount; ++t)
@@ -168,8 +164,8 @@ int main()
 	transitionLabel = new int[transitionCount];
 	transitionHead = new int[transitionCount];
 	Blocks.init(stateCount);
-	Adjacent = new int[transitionCount];
-	Offset = new int[stateCount + 1];
+	adjacent = new int[transitionCount];
+	offset = new int[stateCount + 1];
 	/* Read transitions */
 	for (int t = 0; t < transitionCount; ++t)
 	{
@@ -192,12 +188,12 @@ int main()
 	finalStatesCount = rr;
 	rem_unreachable(transitionHead, transitionTail);
 	/* Make initial partition */
-	Touched = new int[transitionCount + 1];
-	Marked = new int[transitionCount + 1];
-	Marked[0] = finalStatesCount;
+	touched = new int[transitionCount + 1];
+	marked = new int[transitionCount + 1];
+	marked[0] = finalStatesCount;
 	if (finalStatesCount)
 	{
-		Touched[touchedCount++] = 0;
+		touched[touchedCount++] = 0;
 		Blocks.split();
 	}
 	/* Make transition partition */
@@ -205,7 +201,7 @@ int main()
 	if (transitionCount)
 	{
 		std::sort(Cords.elements, Cords.elements + transitionCount, cmp);
-		Cords.setCount = Marked[0] = 0; int a = transitionLabel[Cords.elements[0]];
+		Cords.setCount = marked[0] = 0; int a = transitionLabel[Cords.elements[0]];
 		for (int i = 0; i < transitionCount; ++i)
 		{
 			int t = Cords.elements[i];
@@ -214,7 +210,7 @@ int main()
 				a = transitionLabel[t];
 				Cords.past[Cords.setCount++] = i;
 				Cords.first[Cords.setCount] = i;
-				Marked[Cords.setCount] = 0;
+				marked[Cords.setCount] = 0;
 			}
 			Cords.setOf[t] = Cords.setCount;
 			Cords.location[t] = i;
@@ -236,9 +232,9 @@ int main()
 		{
 			for (i = Blocks.first[b]; i < Blocks.past[b]; ++i)
 			{
-				for (j = Offset[Blocks.elements[i]]; j < Offset[Blocks.elements[i] + 1]; ++j)
+				for (j = offset[Blocks.elements[i]]; j < offset[Blocks.elements[i] + 1]; ++j)
 				{
-					Cords.mark(Adjacent[j]);
+					Cords.mark(adjacent[j]);
 				}
 			}
 			Cords.split(); ++b;
