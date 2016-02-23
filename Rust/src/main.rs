@@ -25,7 +25,7 @@ fn read_dfa() -> DFA
 	let final_state_count;
 	stdin.read_line(&mut buffer).unwrap();
 	{
-		let header: Vec<&str> = buffer.split(' ').collect();
+		let header: Vec<&str> = buffer.trim_right().split(' ').collect();
 		state_count = usize::from_str(header[0]).unwrap();
 		transition_count = usize::from_str(header[1]).unwrap();
 		start_state = usize::from_str(header[2]).unwrap();
@@ -38,8 +38,9 @@ fn read_dfa() -> DFA
 	// Read Transitions
 	for _ in 0..transition_count
 	{
+		buffer.clear();
 		stdin.read_line(&mut buffer).unwrap();
-		let transition: Vec<&str> = buffer.split(' ').collect();
+		let transition: Vec<&str> = buffer.trim_right().split(' ').collect();
 		let from_state = usize::from_str(transition[0]).unwrap();
 		let input = i32::from_str(transition[0]).unwrap();
 		let to_state = usize::from_str(transition[0]).unwrap();
@@ -49,8 +50,9 @@ fn read_dfa() -> DFA
 	// Read Final States
 	for _ in 0..final_state_count
 	{
+		buffer.clear();
 		stdin.read_line(&mut buffer).unwrap();
-		let final_state = usize::from_str(&buffer).unwrap();
+		let final_state = usize::from_str(buffer.trim_right()).unwrap();
 		dfa.add_final_state(final_state);
 	}
 

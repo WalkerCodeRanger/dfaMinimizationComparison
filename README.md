@@ -43,6 +43,8 @@ This project was really created to evaluate the Rust language.  As such, the Rus
 
 Based on my experience writing this version of the algorithm, a formed the following opinions about the pros and cons of the Rust programming language.
 
+In Rust 1.6.0:
+
 **Pros:**
 
   * Type inference! especially on certain generic parameters
@@ -70,6 +72,12 @@ Based on my experience writing this version of the algorithm, a formed the follo
   * Don't have editor with really good completion, coloring etc. like Visual Studio
   * Don't have refactoring tool like with Resharper
   * Miss being able to omit curly braces on if, else, for etc.
+  * Windows install doesn't come with a debugger
+  * `gdb` isn't my idea of a good debugger
+  * `RUST_BACKTRACE` environment variable not discoverable, why isn't this on by default for debug builds?
+  * Was forced to resort to `println!` and comment out code debugging
+  * `read_line()` includes the newline characters, that's annoying and inconvenient (C# and Java don't work this way), though I guess it could have uses when you are appending to a buffer string
+  * Lifetime rules make the `buffer.clear()` calls in `read_dfa()` awkward. Would make more sense to put them at the end of using the buffer value, but that would require another scope
 
 #### Returning iterators
 In several places I wanted to return an iterator from a function (for example in `PartitionMarking.marked`).  This is something I do quite commonly in C#.  There appear to be several language limitations that are interacting poorly to make this very difficult.  I can't honestly say I understand all the issues.  However, there is discussion on stack overflow [here](http://stackoverflow.com/questions/31904842/return-a-map-iterator-which-is-using-a-closure-in-rust) and [here](http://stackoverflow.com/questions/27646925/how-do-i-return-a-filter-iterator-from-a-function).  The accepted work around seems to be to return a `Box<Iterator<...>...>`.  That of course introduces extra heap allocation and pointers.  However, I wasn't even able to get that solution working due to lifetime issues.  I ended up `.collect()`ing the values into a `Vec<usize>` and returning that.  Which is apparently a common though even uglier workaround.  It seems one of the [issues](https://github.com/rust-lang/rfcs/issues/518) is that there is no way to return an "abstract" type from a function.  So it becomes necessary to return a very specific concrete type of iterator that then leaks information about the implementation of your function.  There is an [RFC](https://github.com/Kimundi/rfcs/blob/function_output_type_parameters/text/0000-function_output_type_parameters.md) and [pull request](https://github.com/rust-lang/rfcs/pull/1305) on this.  The other problem seems to revolve around the complexities of the lifetimes necessary for this to work.  I still need to dig into that issue more.
