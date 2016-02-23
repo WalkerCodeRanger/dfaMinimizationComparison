@@ -200,11 +200,9 @@ impl AdjacentTransitions
 
 	fn build_adjacency(&mut self, state_count: usize, transitions: &Vec<Transition>, get_state: fn(&Transition) -> usize)
 	{
-		// initilize offset to zeros
-		for _ in 0..state_count
-		{
-			self.offset.push(0);
-		}
+		// initialize offset to zeros
+		self.offset.clear();
+		self.offset.resize(state_count+1, 0);
 
 		// Count transitions per state
 		for transition in transitions
@@ -219,6 +217,7 @@ impl AdjacentTransitions
 		}
 
 		// Place transitions, and correct offsets
+		self.adjacent.resize(transitions.len(), 0);
 		for (i, transition) in transitions.iter().enumerate()
 		{
 			// TODO couldn't modify value and read in one line

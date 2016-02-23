@@ -14,6 +14,7 @@ namespace DfaMinComparisonCSharp.CSharp
 		private int setCount; // z - the number of sets
 		private readonly int[] elements; // E[f], E[f+1],...E[p-1] The elements of the set s where f=first[s] and p=past[s]
 		private readonly int[] location; // L[e] the location of element e
+		// TODO change setOf to int? since not all elements are in a set
 		private readonly int[] setOf; // S[e] the set the element e belongs to
 		private readonly int[] first; // F[s] the first element of set s
 		private readonly int[] past; // P[s] the element past the end of set s
@@ -168,6 +169,7 @@ namespace DfaMinComparisonCSharp.CSharp
 			Array.Sort(partition, elements);
 
 			// Create sets for each partition
+			first[0] = 0; // The first set starts at 0
 			var currentPartition = partition[0];
 			for(var i = 0; i < elements.Length; ++i)
 			{

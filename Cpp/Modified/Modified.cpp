@@ -84,8 +84,8 @@ struct Partition
 	}
 };
 
-Partition Blocks; // blocks (consist of states)
-Partition Cords; // cords (consist of transitions)
+Partition blocks; // blocks (consist of states)
+Partition cords; // cords (consist of transitions)
 int stateCount; // number of states
 int transitionCount; // number of transitions
 int finalStatesCount; // number of final states
@@ -120,13 +120,13 @@ void make_adjacent(int states[])
 int rr = 0; // number of reached states
 inline void reach(int state)
 {
-	int i = Blocks.location[state];
+	int i = blocks.location[state];
 	if (i >= rr)
 	{
-		Blocks.elements[i] = Blocks.elements[rr];
-		Blocks.location[Blocks.elements[i]] = i;
-		Blocks.elements[rr] = state;
-		Blocks.location[state] = rr++;
+		blocks.elements[i] = blocks.elements[rr];
+		blocks.location[blocks.elements[i]] = i;
+		blocks.elements[rr] = state;
+		blocks.location[state] = rr++;
 	}
 }
 
@@ -136,13 +136,13 @@ void rem_unreachable(int tail[], int head[])
 	int i, j;
 	for (i = 0; i < rr; ++i)
 	{
-		for (j = offset[Blocks.elements[i]]; j < offset[Blocks.elements[i] + 1]; ++j)
+		for (j = offset[blocks.elements[i]]; j < offset[blocks.elements[i] + 1]; ++j)
 			reach(head[adjacent[j]]);
 	}
 	j = 0;
 	for (int t = 0; t < transitionCount; ++t)
 	{
-		if (Blocks.location[tail[t]] < rr)
+		if (blocks.location[tail[t]] < rr)
 		{
 			head[j] = head[t];
 			transitionLabel[j] = transitionLabel[t];
@@ -151,7 +151,7 @@ void rem_unreachable(int tail[], int head[])
 		}
 	}
 	transitionCount = j;
-	Blocks.past[0] = rr;
+	blocks.past[0] = rr;
 	rr = 0;
 }
 
@@ -163,7 +163,7 @@ int main()
 	transitionTail = new int[transitionCount];
 	transitionLabel = new int[transitionCount];
 	transitionHead = new int[transitionCount];
-	Blocks.init(stateCount);
+	blocks.init(stateCount);
 	adjacent = new int[transitionCount];
 	offset = new int[stateCount + 1];
 	/* Read transitions */
@@ -180,7 +180,7 @@ int main()
 	{
 		int q;
 		std::cin >> q;
-		if (Blocks.location[q] < Blocks.past[0])
+		if (blocks.location[q] < blocks.past[0])
 		{
 			reach(q);
 		}
@@ -194,50 +194,52 @@ int main()
 	if (finalStatesCount)
 	{
 		touched[touchedCount++] = 0;
-		Blocks.split();
+		blocks.split();
 	}
 	/* Make transition partition */
-	Cords.init(transitionCount);
+	cords.init(transitionCount);
 	if (transitionCount)
 	{
-		std::sort(Cords.elements, Cords.elements + transitionCount, cmp);
-		Cords.setCount = marked[0] = 0; int a = transitionLabel[Cords.elements[0]];
+		std::sort(cords.elements, cords.elements + transitionCount, cmp);
+		cords.setCount = marked[0] = 0;
+		// this code relies on the fact that cords.first[0] == 0 at this point for the first set to be correct
+		int currentLabel = transitionLabel[cords.elements[0]];
 		for (int i = 0; i < transitionCount; ++i)
 		{
-			int t = Cords.elements[i];
-			if (transitionLabel[t] != a)
+			int t = cords.elements[i];
+			if (transitionLabel[t] != currentLabel)
 			{
-				a = transitionLabel[t];
-				Cords.past[Cords.setCount++] = i;
-				Cords.first[Cords.setCount] = i;
-				marked[Cords.setCount] = 0;
+				currentLabel = transitionLabel[t];
+				cords.past[cords.setCount++] = i;
+				cords.first[cords.setCount] = i;
+				marked[cords.setCount] = 0;
 			}
-			Cords.setOf[t] = Cords.setCount;
-			Cords.location[t] = i;
+			cords.setOf[t] = cords.setCount;
+			cords.location[t] = i;
 		}
-		Cords.past[Cords.setCount++] = transitionCount;
+		cords.past[cords.setCount++] = transitionCount;
 	}
 
 	/* Split blocks and cords */
 	make_adjacent(transitionHead);
 	int b = 1, c = 0, i, j;
-	while (c < Cords.setCount)
+	while (c < cords.setCount)
 	{
-		for (i = Cords.first[c]; i < Cords.past[c]; ++i)
+		for (i = cords.first[c]; i < cords.past[c]; ++i)
 		{
-			Blocks.mark(transitionTail[Cords.elements[i]]);
+			blocks.mark(transitionTail[cords.elements[i]]);
 		}
-		Blocks.split(); ++c;
-		while (b < Blocks.setCount)
+		blocks.split(); ++c;
+		while (b < blocks.setCount)
 		{
-			for (i = Blocks.first[b]; i < Blocks.past[b]; ++i)
+			for (i = blocks.first[b]; i < blocks.past[b]; ++i)
 			{
-				for (j = offset[Blocks.elements[i]]; j < offset[Blocks.elements[i] + 1]; ++j)
+				for (j = offset[blocks.elements[i]]; j < offset[blocks.elements[i] + 1]; ++j)
 				{
-					Cords.mark(adjacent[j]);
+					cords.mark(adjacent[j]);
 				}
 			}
-			Cords.split(); ++b;
+			cords.split(); ++b;
 		}
 	}
 	/* Count the numbers of transitions
@@ -245,30 +247,30 @@ int main()
 	int mo = 0, fo = 0;
 	for (int t = 0; t < transitionCount; ++t)
 	{
-		if (Blocks.location[transitionTail[t]] == Blocks.first[Blocks.setOf[transitionTail[t]]])
+		if (blocks.location[transitionTail[t]] == blocks.first[blocks.setOf[transitionTail[t]]])
 		{
 			++mo;
 		}
 	}
-	for (int b = 0; b < Blocks.setCount; ++b)
+	for (int b = 0; b < blocks.setCount; ++b)
 	{
-		if (Blocks.first[b] < finalStatesCount)
+		if (blocks.first[b] < finalStatesCount)
 		{
 			++fo;
 		}
 	}
 	/* Print the result */
-	std::cout << Blocks.setCount << ' ' << mo << ' ' << Blocks.setOf[initialState] << ' ' << fo << '\n';
+	std::cout << blocks.setCount << ' ' << mo << ' ' << blocks.setOf[initialState] << ' ' << fo << '\n';
 	for (int t = 0; t < transitionCount; ++t)
 	{
-		if (Blocks.location[transitionTail[t]] == Blocks.first[Blocks.setOf[transitionTail[t]]])
+		if (blocks.location[transitionTail[t]] == blocks.first[blocks.setOf[transitionTail[t]]])
 		{
-			std::cout << Blocks.setOf[transitionTail[t]] << ' ' << transitionLabel[t] << ' ' << Blocks.setOf[transitionHead[t]] << '\n';
+			std::cout << blocks.setOf[transitionTail[t]] << ' ' << transitionLabel[t] << ' ' << blocks.setOf[transitionHead[t]] << '\n';
 		}
 	}
-	for (int b = 0; b < Blocks.setCount; ++b)
+	for (int b = 0; b < blocks.setCount; ++b)
 	{
-		if (Blocks.first[b] < finalStatesCount)
+		if (blocks.first[b] < finalStatesCount)
 		{
 			std::cout << b << '\n';
 		}

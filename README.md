@@ -78,6 +78,7 @@ In Rust 1.6.0:
   * Was forced to resort to `println!` and comment out code debugging
   * `read_line()` includes the newline characters, that's annoying and inconvenient (C# and Java don't work this way), though I guess it could have uses when you are appending to a buffer string
   * Lifetime rules make the `buffer.clear()` calls in `read_dfa()` awkward. Would make more sense to put them at the end of using the buffer value, but that would require another scope
+  * Lifetimes in same line are too restrictive (see comments)
 
 #### Returning iterators
 In several places I wanted to return an iterator from a function (for example in `PartitionMarking.marked`).  This is something I do quite commonly in C#.  There appear to be several language limitations that are interacting poorly to make this very difficult.  I can't honestly say I understand all the issues.  However, there is discussion on stack overflow [here](http://stackoverflow.com/questions/31904842/return-a-map-iterator-which-is-using-a-closure-in-rust) and [here](http://stackoverflow.com/questions/27646925/how-do-i-return-a-filter-iterator-from-a-function).  The accepted work around seems to be to return a `Box<Iterator<...>...>`.  That of course introduces extra heap allocation and pointers.  However, I wasn't even able to get that solution working due to lifetime issues.  I ended up `.collect()`ing the values into a `Vec<usize>` and returning that.  Which is apparently a common though even uglier workaround.  It seems one of the [issues](https://github.com/rust-lang/rfcs/issues/518) is that there is no way to return an "abstract" type from a function.  So it becomes necessary to return a very specific concrete type of iterator that then leaks information about the implementation of your function.  There is an [RFC](https://github.com/Kimundi/rfcs/blob/function_output_type_parameters/text/0000-function_output_type_parameters.md) and [pull request](https://github.com/rust-lang/rfcs/pull/1305) on this.  The other problem seems to revolve around the complexities of the lifetimes necessary for this to work.  I still need to dig into that issue more.
@@ -87,10 +88,30 @@ From my perspective, this is a huge hole in the functionality of the Rust langua
 #### `String` vs `&str`
 The difference between these types is confusing.  It is often unclear when to use one vs the other.  I think part of the confusion is because of the naming. String is what other languages call `StringBuilder`.  It is also very non-obvious that to convert from `String` to `&str` you dereference the value as `&value`.  In other parts of the language, dereferencing generally doesn't mean implicit type conversion. While languages like C# and Java have this distinction with there `StringBuilder` types I think it is less confusing because they use the `StringBuilder` only rarely when absolutely necessary.  Rust seems to make must more frequent use of the `String` type.  I imagine this is for reasons of both performance and limitations imposed by lifetimes and the borrow checker.
 
-#### Lifetimes
+#### Lifetimes to End of Scope
 The lifetime of a local variable extends until the end of its scope regardless of the last usage.  It might be nice if the Rust compiler could infer that in some situations the lifetime of a variable or borrow could be shorter to allow reuse without introducing explicit scopes.  For example, in [read_dfa()](Rust/src/main.rs), the read buffer is split into the `header`.  The header is then parsed into four integer values.  At that point, the header is no longer used and nothing is holding a reference to it.  However, when the read of the transitions went to reuse the `buffer`, it couldn't because the `header` split was still holding a borrow on the `buffer`.  It would be evident to a developer that `header` was no longer used and it should be safe to reuse the `buffer` at that point.  Instead, it was necessary to introduce a scope using curly braces to make it clear to the compiler when `header` should go out of scope.
 
 I can see some reasons why it works the way it does.  The current behaviour makes it very clear and explicit when things go out of scope.  That may matter when something implements the drop trait.  It also avoids any developer surprise.
 
 #### "Stolen" values
 In working on the `PartitionMarking::partition_by` method I ran across a very frustrating problem.  If a function you don't control takes something that doesn't implement `Copy` by value, it can cause real headaches.  In this case, it was the slice `sort_by_key` method.  It takes the second parameter, a closure providing the key to sort by, by value.  So the closure is moved into the function and then can't be invoked after calling `sort_by_key`.  The closure value has been "stolen".  This seems to be an issue with all API functions taking closures.  They all take their closures by value causing this kind of issue.  I eventually stumbled upon the workaround of creating a new local lambda that calls the closure.  That however just seems like a bad hack as it introduces an extra layer of calls (which admittedly might get optimized away).  However, if some API made this mistake with a value that wasn't a closure, I don't think there would be any workaround.
+
+#### Lifetimes in Same Line
+This issue came up in `PartitionMarking::split_sets`.  The line `p.first.push(p.first[set]);` gives the compiler error:
+
+	error: cannot borrow `p.first` as immutable because it is also borrowed as mutable [E0502]
+	p.first.push(p.first[set]);
+				 ^~~~~~~
+	note: previous borrow of `p.first` occurs here; the mutable borrow prevents subsequent moves, borrows, or modification of `p.first` until the borrow ends
+	p.first.push(p.first[set]);
+	^~~~~~~
+	note: previous borrow ends here
+	p.first.push(p.first[set]);
+							 ^
+
+However, the read of the value `p.first[set]` is complete before the call to `p.first.push(...)` since function arguments must be evaluated before the call is made.  Changing the code this makes it compile:
+
+	let first_of_set = p.first[set];
+	p.first.push(first_of_set);
+
+	Most languages and developers would say that is exactly equivalent code.

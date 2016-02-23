@@ -69,8 +69,9 @@ impl Partition
 
 	pub fn begin_marking<'a>(&'a mut self, marks: &'a mut PartitionMarks) -> PartitionMarking
 	{
-		assert!(marks.marked.len() == 0);
 		assert!(marks.touched.len() == 0);
+		marks.marked.clear();
+		marks.marked.resize(self.set_count, 0);
 		PartitionMarking { partition: self, marks: marks }
 	}
 }
@@ -94,19 +95,25 @@ impl <'a> PartitionMarking<'a>
 	{
 		let p = &mut self.partition;
 		let m = &mut self.marks;
-		let set = p.set_of[element].unwrap();
-		let element_index = p.location[element];
-		let first_unmarked = p.first[set] + m.marked[set];
-		p.elements[element_index] = p.elements[first_unmarked];
-		p.location[p.elements[element_index]] = element_index;
-		p.elements[first_unmarked] = element;
-		p.location[element] = first_unmarked;
-		// add to touched if needed and increment the number of marked
-		if m.marked[set] == 0
+		match p.set_of[element]
 		{
-			m.touched.push(set);
+			Some(set) =>
+			{
+				let element_index = p.location[element];
+				let first_unmarked = p.first[set] + m.marked[set];
+				p.elements[element_index] = p.elements[first_unmarked];
+				p.location[p.elements[element_index]] = element_index;
+				p.elements[first_unmarked] = element;
+				p.location[element] = first_unmarked;
+				// add to touched if needed and increment the number of marked
+				if m.marked[set] == 0
+				{
+					m.touched.push(set);
+				}
+				m.marked[set] += 1;
+			},
+			None => {}
 		}
-		m.marked[set] += 1;
 	}
 
 	// TODO Can't get returning an iterator to work
@@ -141,15 +148,17 @@ impl <'a> PartitionMarking<'a>
 			// unless we are keeping marked, then make a new set out of unmarked
 			if m.marked[set] <= p.past[set] - first_unmarked
 			{
-				p.first[p.set_count] = p.first[set];
+				let first_of_set = p.first[set];
+				p.first.push(first_of_set);
 				p.first[set] = first_unmarked;
-				p.past[p.set_count] = first_unmarked;
+				p.past.push(first_unmarked);
 			}
 			else
 			{
-				p.past[p.set_count] = p.past[set];
+				let past_of_set = p.past[set];
+				p.past.push(past_of_set);
 				p.past[set] = first_unmarked;
-				p.first[p.set_count] = first_unmarked;
+				p.first.push(first_unmarked);
 			}
 
 			// mark the elements as members of the new set
@@ -159,7 +168,7 @@ impl <'a> PartitionMarking<'a>
 			}
 
 			// clear marks on old and new set
-			m.marked[p.set_count] = 0;
+			m.marked.push(0);
 			m.marked[set] = 0;
 
 			// increase set count
@@ -209,6 +218,8 @@ impl <'a> PartitionMarking<'a>
 		// Wipes out any existing sets
 		m.marked[0] = 0;
 		p.set_count = 0;
+		p.first.clear();
+		p.past.clear();
 
 		// Sort them by the partition func so they will be together
 		// TODO if we don't make a new lambda/closure here, the partition variable is moved and we can't use it later in the method. This is a hack.
@@ -217,21 +228,22 @@ impl <'a> PartitionMarking<'a>
 		p.elements.sort_by(|a, b| partition(a).cmp(&partition(b)));
 
 		// Create sets for each partition
+		p.first.push(0); // The first set starts at 0
 		let mut current_partition = partition(&0);
 		for (i, &element) in p.elements.iter().enumerate()
 		{
 			if partition(&i) != current_partition
 			{
 				current_partition = partition(&i);
-				p.past[p.set_count] = i;
+				p.past.push(i);
 				p.set_count += 1;
-				p.first[p.set_count] = i;
-				m.marked[p.set_count] = 0;
+				p.first.push(i);
+				m.marked.push(0);
 			}
 			p.set_of[element] = Some(p.set_count);
 			p.location[element] = i;
 		}
 		p.set_count += 1;
-		p.past[p.set_count] = p.elements.len();
+		p.past.push(p.elements.len());
 	}
 }
