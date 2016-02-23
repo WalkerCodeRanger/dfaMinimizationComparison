@@ -1,4 +1,4 @@
-//#![feature(slice_sort_by_key)]
+use std::cmp::Ord;
 
 pub struct Partition
 {
@@ -53,6 +53,18 @@ impl Partition
 	pub fn set_of(&self, element: usize) -> Option<usize>
 	{
 		self.set_of[element]
+	}
+
+	// TODO again with needing to return an iterator
+	pub fn set(&self, set: usize) -> Vec<usize>
+	{
+		let first_of_set = self.first[set];
+		return (first_of_set..(self.past[set]-first_of_set)).map(|i| self.elements[i]).collect();
+	}
+
+	pub fn some_element_of(&self, set: usize) -> usize
+	{
+		self.elements[self.first[set]]
 	}
 
 	pub fn begin_marking<'a>(&'a mut self, marks: &'a mut PartitionMarks) -> PartitionMarking
@@ -188,8 +200,8 @@ impl <'a> PartitionMarking<'a>
 		m.touched.clear();
 	}
 
-	pub fn partition_by<F>(&mut self, mut partition: F)
-		where F: FnMut(&usize) -> usize
+	pub fn partition_by<F, P>(&mut self, mut partition: F)
+		where F: FnMut(&usize) -> P, P: Ord
 	{
 		let p = &mut self.partition;
 		let m = &mut self.marks;
@@ -201,7 +213,7 @@ impl <'a> PartitionMarking<'a>
 		// Sort them by the partition func so they will be together
 		// TODO if we don't make a new lambda/closure here, the partition variable is moved and we can't use it later in the method. This is a hack.
 		// TODO the sort_by_key method is stable in 1.7, until then we have copied its implementation here
-		//p.elements.sort_by_key(|e| partition(e));
+		//p.elements.sort_by_key(|e| partition(e)); //#![feature(slice_sort_by_key)]
 		p.elements.sort_by(|a, b| partition(a).cmp(&partition(b)));
 
 		// Create sets for each partition

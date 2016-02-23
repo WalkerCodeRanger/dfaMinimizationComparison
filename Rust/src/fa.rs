@@ -59,12 +59,14 @@ impl DFA
 	{
 		let mut transitions = self.transitions.to_vec();
 
+		// Shared/reused data structures
 		let mut marks = PartitionMarks::new(self.transitions.len()+1);
+		let mut adjacent_transitions = AdjacentTransitions::new(self.state_count, self.transitions.len());
+
 		let mut blocks = Partition::new(self.state_count);
 
 		{
 			let mut block_marking = blocks.begin_marking(&mut marks);
-			let mut adjacent_transitions = AdjacentTransitions::new(self.state_count, self.transitions.len());
 
 			// Reachable from start
 			block_marking.mark(self.start_state);
@@ -91,11 +93,62 @@ impl DFA
 		// Cords partition to manage transitions
 		let mut cords = Partition::new(transitions.len());
 
-		let mut cord_marking = blocks.begin_marking(&mut marks);
+		{
+			let mut cord_marking = cords.begin_marking(&mut marks);
 
-		// Split transitions by input
+			// Split transitions by input
+			cord_marking.partition_by(|&transition| transitions[transition].on_input);
+		}
 
-		unimplemented!();
+		//Split blocks and cords
+		adjacent_transitions.build_adjacency(self.state_count, &transitions, get_to);
+		let mut block_set = 1;
+		for cord_set in 0..cords.set_count()
+		{
+			{
+				let mut block_marking = blocks.begin_marking(&mut marks);
+				for transition in cords.set(cord_set)
+				{
+					block_marking.mark(transitions[transition].from);
+				}
+				block_marking.split_sets();
+			}
+
+			let mut cord_marking = cords.begin_marking(&mut marks);
+
+			while block_set < blocks.set_count()
+			{
+				for state in blocks.set(block_set)
+				{
+					for transition in adjacent_transitions.of(state)
+					{
+						cord_marking.mark(transition);
+					}
+				}
+				cord_marking.split_sets();
+				block_set += 1;
+			}
+		}
+
+		// Generate minimized DFA
+		let mut min_dfa = DFA::new(blocks.set_count(), blocks.set_of(self.start_state).unwrap());
+
+		// Set Final States
+		for &final_state in &self.final_states
+		{
+			min_dfa.add_final_state(blocks.set_of(final_state).unwrap());
+		}
+
+		// Create transitions
+		for set in 0..cords.set_count()
+		{
+			let transition = &transitions[cords.some_element_of(set)];
+			let from = blocks.set_of(transition.from).unwrap();
+			let to = blocks.set_of(transition.to).unwrap();
+			min_dfa.add_transition(from, transition.on_input, to);
+		}
+
+		return min_dfa;
 	}
 
 	fn discard_not_reachable(&self,

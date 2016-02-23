@@ -51,6 +51,7 @@ Based on my experience writing this version of the algorithm, a formed the follo
   * Can use `_` in place of unneeded for loop variable name
   * Can safely return immutable references to parts of a struct's internal structure
   * Strict typing with `usize` pushed me to good design, changing `Partition.set_of` into `Vec<Option<usize>>`
+  * Able to implement safe memory/data structure reuse and sharing, for example of `PartitionMarks`
 
 **Cons:**
 

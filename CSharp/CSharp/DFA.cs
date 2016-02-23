@@ -82,10 +82,8 @@ namespace DfaMinComparisonCSharp.CSharp
 			var minDFA = new DFA(blocks.SetCount, blocks.SetOf(StartState));
 
 			// Set Final States
-			for(var set = 0; set < blocks.SetCount; set++)
-				// Sets are either all final or non-final states
-				if(finalStates.Contains(blocks.SomeElementOf(set)))
-					minDFA.AddFinalState(set);
+			foreach(var finalState in finalStates)
+				minDFA.AddFinalState(blocks.SetOf(finalState));
 
 			// Create transitions
 			for(var set = 0; set < cords.SetCount; set++)
