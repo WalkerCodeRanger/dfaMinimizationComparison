@@ -136,7 +136,11 @@ impl DFA
 		// Set Final States
 		for &final_state in &self.final_states
 		{
-			min_dfa.add_final_state(blocks.set_of(final_state).unwrap());
+			// not all final states may have been reachable
+			if let Some(set) = blocks.set_of(final_state)
+			{
+				min_dfa.add_final_state(set);
+			}
 		}
 
 		// Create transitions
@@ -161,13 +165,42 @@ impl DFA
 	{
 		adjacent_transitions.build_adjacency(self.state_count, transitions, get_from);
 
-		for state in block_marking.marked(0)
+		// This section of code has been a real headache, because the algo wants
+		// to modify the collection while iterating it.  In this version we have actually
+		// created an iterator that has a method to safely mutable the collection.  However,
+		// to access the iterator object we need to switch to a while let loop instead of
+		// a for loop.  The alternative is keeping some local collection instead. See below
+		// for that version.
+		{
+			let mut marked = block_marking.marked_in_set_mut(0);
+			while let Some(state) = marked.next()
+			{
+				for transition in adjacent_transitions.of(state)
+				{
+					marked.mark(get_to(&transitions[transition]));
+				}
+			}
+		}
+
+		// This is an alternate version of the above code that does not rely on the ability to mutate the
+		// block_marking while iterating it.  But we still need to mutate the states vector while looping
+		// through its contents, so we still end up with a while loop.
+		// This loop is infinite! because we keep going through the states repeatedly!
+		/*
+		let mut states: Vec<usize> = block_marking.marked_in_set(0).collect(); // TODO why is `Vec<usize>` needed here?
+		while let Some(state) = states.pop()
 		{
 			for transition in adjacent_transitions.of(state)
 			{
-				block_marking.mark(get_to(&transitions[transition]));
+				let state = get_to(&transitions[transition]);
+				if !block_marking.is_marked(state)
+				{
+					block_marking.mark(state);
+					states.push(state);
+				}
 			}
 		}
+		*/
 
 		block_marking.discard_unmarked();
 
@@ -187,8 +220,8 @@ fn get_to(t: &Transition) -> usize
 
 struct AdjacentTransitions
 {
-	adjacent: Vec<usize>,
-	offset: Vec<usize>
+	adjacent: Vec<usize>, // transitions grouped by state they are adjacent to
+	offset: Vec<usize> // offsets into adjacent list for a given state
 }
 
 impl AdjacentTransitions
@@ -198,7 +231,8 @@ impl AdjacentTransitions
 		AdjacentTransitions { adjacent: Vec::with_capacity(transition_count), offset: Vec::with_capacity(state_count+1) }
 	}
 
-	fn build_adjacency(&mut self, state_count: usize, transitions: &Vec<Transition>, get_state: fn(&Transition) -> usize)
+	fn build_adjacency<F>(&mut self, state_count: usize, transitions: &Vec<Transition>, mut get_state: F)
+		where F : FnMut(&Transition) -> usize
 	{
 		// initialize offset to zeros
 		self.offset.clear();
@@ -228,9 +262,9 @@ impl AdjacentTransitions
 		}
 	}
 
-	// TODO again with the inability to return iterators
-	fn of(&self, state: usize) -> Vec<usize>
+	// TODO have to use box to return abstract iterator
+	fn of<'a>(&'a self, state: usize) -> Box<Iterator<Item=usize> + 'a>
 	{
-		return (self.offset[state]..self.offset[state+1]).map(|transition| self.adjacent[transition]).collect();
+		return Box::new((self.offset[state]..self.offset[state+1]).map(move |i| self.adjacent[i]));
 	}
 }

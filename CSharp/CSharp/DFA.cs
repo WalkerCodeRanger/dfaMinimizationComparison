@@ -105,7 +105,7 @@ namespace DfaMinComparisonCSharp.CSharp
 		{
 			var adjacentTransitions = new AdjacentTransitions(StateCount, transitions, getFrom);
 
-			foreach(var state in blocks.Marked(0))
+			foreach(var state in blocks.MarkedInSet(0))
 				foreach(var transition in adjacentTransitions[state])
 					blocks.Mark(getTo(transitions[transition]));
 

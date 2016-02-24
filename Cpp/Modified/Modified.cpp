@@ -42,6 +42,7 @@ struct Partition
 		int set = setOf[element];
 		int i = location[element];
 		int j = first[set] + marked[set];
+		// warning, function here relies on the fact that you won't call mark on an element that is already marked
 		elements[i] = elements[j];
 		location[elements[i]] = i;
 		elements[j] = element;
@@ -58,21 +59,24 @@ struct Partition
 		while (touchedCount)
 		{
 			int set = touched[--touchedCount];
-			int j = first[set] + marked[set];
-			if (j == past[set])
+			int firstUnmarked = first[set] + marked[set];
+			if (firstUnmarked == past[set])
 			{
 				marked[set] = 0;
 				continue;
 			}
-			if (marked[set] <= past[set] - j)
+
+			// Make the smaller half a new set
+			// If same size, then make a new set out of unmarked
+			if (marked[set] <= past[set] - firstUnmarked)
 			{
 				first[setCount] = first[set];
-				past[setCount] = first[set] = j;
+				past[setCount] = first[set] = firstUnmarked;
 			}
 			else
 			{
 				past[setCount] = past[set];
-				first[setCount] = past[set] = j;
+				first[setCount] = past[set] = firstUnmarked;
 			}
 			for (int i = first[setCount]; i < past[setCount]; ++i)
 			{
@@ -117,32 +121,33 @@ void make_adjacent(int states[])
 }
 
 /* Removal of irrelevant parts */
-int rr = 0; // number of reached states
+int reachableCount = 0; // number of reached states
 inline void reach(int state)
 {
 	int i = blocks.location[state];
-	if (i >= rr)
+	if (i >= reachableCount)
 	{
-		blocks.elements[i] = blocks.elements[rr];
+		blocks.elements[i] = blocks.elements[reachableCount];
 		blocks.location[blocks.elements[i]] = i;
-		blocks.elements[rr] = state;
-		blocks.location[state] = rr++;
+		blocks.elements[reachableCount] = state;
+		blocks.location[state] = reachableCount++;
 	}
 }
 
 void rem_unreachable(int tail[], int head[])
 {
 	make_adjacent(tail);
-	int i, j;
-	for (i = 0; i < rr; ++i)
+	// walk the DFA graph marking reachable states
+	for (int i = 0; i < reachableCount; ++i)
 	{
-		for (j = offset[blocks.elements[i]]; j < offset[blocks.elements[i] + 1]; ++j)
+		for (int j = offset[blocks.elements[i]]; j < offset[blocks.elements[i] + 1]; ++j)
 			reach(head[adjacent[j]]);
 	}
-	j = 0;
+	// remove unreachable states and transitions
+	int j = 0;
 	for (int t = 0; t < transitionCount; ++t)
 	{
-		if (blocks.location[tail[t]] < rr)
+		if (blocks.location[tail[t]] < reachableCount)
 		{
 			head[j] = head[t];
 			transitionLabel[j] = transitionLabel[t];
@@ -151,8 +156,8 @@ void rem_unreachable(int tail[], int head[])
 		}
 	}
 	transitionCount = j;
-	blocks.past[0] = rr;
-	rr = 0;
+	blocks.past[0] = reachableCount;
+	reachableCount = 0;
 }
 
 /* Main program */
@@ -185,7 +190,7 @@ int main()
 			reach(q);
 		}
 	}
-	finalStatesCount = rr;
+	finalStatesCount = reachableCount;
 	rem_unreachable(transitionHead, transitionTail);
 	/* Make initial partition */
 	touched = new int[transitionCount + 1];

@@ -85,7 +85,7 @@ namespace DfaMinComparisonCSharp.CSharp
 				}
 
 				// Make the smaller half a new set
-				// unless we are keeping marked, then make a new set out of unmarked
+				// If same size, then make a new set out of unmarked
 				if(marked[set] <= past[set] - firstUnmarked)
 				{
 					first[setCount] = first[set];
@@ -140,7 +140,7 @@ namespace DfaMinComparisonCSharp.CSharp
 			touched.Clear();
 		}
 
-		public IEnumerable<int> Marked(int set)
+		public IEnumerable<int> MarkedInSet(int set)
 		{
 			// The algorithm relies on the fact that you can mark nodes and they will be added to this IEnumerable
 			var firstOfSet = first[set];
@@ -161,6 +161,8 @@ namespace DfaMinComparisonCSharp.CSharp
 
 		public void PartitionBy(Func<int, int> partitionFunc)
 		{
+			if(elements.Length == 0) return;
+
 			// Wipes out any existing sets
 			setCount = marked[0] = 0;
 
