@@ -5,8 +5,8 @@ namespace DfaMinComparisonCSharp.CSharp
 {
 	public class AdjacentTransitions
 	{
-		private readonly int[] adjacent;
-		private readonly int[] offset;
+		private readonly int[] adjacent; // transition indexes grouped by state they are adjacent to
+		private readonly int[] offset; // offsets into adjacent list for a given state
 
 		public AdjacentTransitions(int stateCount, IList<Transition> transitions, Func<Transition, int> getState)
 		{
@@ -19,7 +19,9 @@ namespace DfaMinComparisonCSharp.CSharp
 
 			// Running addition
 			for(var state = 0; state < stateCount; ++state)
+			{
 				offset[state + 1] += offset[state];
+			}
 
 			// Place transitions, and correct offsets
 			for(var transition = transitions.Count - 1; transition >= 0; transition--)
@@ -30,8 +32,8 @@ namespace DfaMinComparisonCSharp.CSharp
 		{
 			get
 			{
-				for(var transition = offset[state]; transition < offset[state + 1]; ++transition)
-					yield return adjacent[transition];
+				for(var i = offset[state]; i < offset[state + 1]; ++i)
+					yield return adjacent[i];
 			}
 		}
 	}

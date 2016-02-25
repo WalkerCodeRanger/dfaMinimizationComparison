@@ -291,7 +291,7 @@ impl<'a, 'b> Iterator for PartitionMarkedSetIterator<'a, 'b>
 	fn next(&mut self) -> Option<usize>
 	{
 		let i = self.location;
-		if i < self.partition_marking.partition.past[self.set]
+		if i < self.partition_marking.partition.first[self.set] + self.partition_marking.marks.marked[self.set]
 		{
 			self.location += 1;
 			return Some(self.partition_marking.partition.elements[i]);

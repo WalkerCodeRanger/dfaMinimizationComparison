@@ -150,6 +150,7 @@ namespace DfaMinComparisonCSharp.CSharp
 
 		public IEnumerable<int> Set(int set)
 		{
+			// Assumes set is >=0 and < setCount
 			var firstOfSet = first[set];
 			return Enumerable.Range(firstOfSet, past[set] - firstOfSet).Select(i => elements[i]);
 		}

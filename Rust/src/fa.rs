@@ -185,7 +185,6 @@ impl DFA
 		// This is an alternate version of the above code that does not rely on the ability to mutate the
 		// block_marking while iterating it.  But we still need to mutate the states vector while looping
 		// through its contents, so we still end up with a while loop.
-		// This loop is infinite! because we keep going through the states repeatedly!
 		/*
 		let mut states: Vec<usize> = block_marking.marked_in_set(0).collect(); // TODO why is `Vec<usize>` needed here?
 		while let Some(state) = states.pop()
@@ -220,7 +219,7 @@ fn get_to(t: &Transition) -> usize
 
 struct AdjacentTransitions
 {
-	adjacent: Vec<usize>, // transitions grouped by state they are adjacent to
+	adjacent: Vec<usize>, // transition indexes grouped by state they are adjacent to
 	offset: Vec<usize> // offsets into adjacent list for a given state
 }
 
