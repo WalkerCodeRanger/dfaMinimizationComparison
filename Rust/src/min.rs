@@ -103,30 +103,26 @@ impl<'a> PartitionMarking<'a>
 	{
 		let p = &mut self.partition;
 		let m = &mut self.marks;
-		match p.set_of[element]
+		if let Some(set) = p.set_of[element]
 		{
-			Some(set) =>
+			let element_index = p.location[element];
+			let first_unmarked = p.first[set] + m.marked[set];
+			if element_index < first_unmarked // already marked
+				{ return; }
+
+			// swap element and the first unmarked in elements, updating location appropriately
+			// (they are in the same set so no need to worry about that)
+			p.elements[element_index] = p.elements[first_unmarked];
+			p.location[p.elements[element_index]] = element_index;
+			p.elements[first_unmarked] = element;
+			p.location[element] = first_unmarked;
+
+			// add to touched if needed and track the number of marked elements
+			if m.marked[set] == 0
 			{
-				let element_index = p.location[element];
-				let first_unmarked = p.first[set] + m.marked[set];
-				if element_index < first_unmarked // already marked
-					{ return; }
-
-				// swap element and the first unmarked in elements, updating location appropriately
-				// (they are in the same set so no need to worry about that)
-				p.elements[element_index] = p.elements[first_unmarked];
-				p.location[p.elements[element_index]] = element_index;
-				p.elements[first_unmarked] = element;
-				p.location[element] = first_unmarked;
-
-				// add to touched if needed and track the number of marked elements
-				if m.marked[set] == 0
-				{
-					m.touched.push(set);
-				}
-				m.marked[set] += 1;
-			},
-			None => {}
+				m.touched.push(set);
+			}
+			m.marked[set] += 1;
 		}
 	}
 
@@ -168,14 +164,14 @@ impl<'a> PartitionMarking<'a>
 			// If same size, then make a new set out of unmarked
 			if m.marked[set] <= p.past[set] - first_unmarked
 			{
-				let first_of_set = p.first[set]; // must be separated out for borrow checker
+				let first_of_set = p.first[set]; // TODO must be separated out for borrow checker
 				p.first.push(first_of_set);
 				p.first[set] = first_unmarked;
 				p.past.push(first_unmarked);
 			}
 			else
 			{
-				let past_of_set = p.past[set]; // must be separated out for borrow checker
+				let past_of_set = p.past[set]; // TODO must be separated out for borrow checker
 				p.past.push(past_of_set);
 				p.past[set] = first_unmarked;
 				p.first.push(first_unmarked);
