@@ -42,8 +42,8 @@ fn read_dfa() -> DFA
 		stdin.read_line(&mut buffer).unwrap();
 		let transition: Vec<&str> = buffer.trim_right().split(' ').collect();
 		let from_state = usize::from_str(transition[0]).unwrap();
-		let input = i32::from_str(transition[0]).unwrap();
-		let to_state = usize::from_str(transition[0]).unwrap();
+		let input = i32::from_str(transition[1]).unwrap();
+		let to_state = usize::from_str(transition[2]).unwrap();
 		dfa.add_transition(from_state, input, to_state);
 	}
 
