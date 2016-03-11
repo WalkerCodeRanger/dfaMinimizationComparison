@@ -1,7 +1,7 @@
 # Comparison of DFA minimization algorithm in C++, C# and Rust
 This project implements the DFA minimization algorithm described in "[Fast brief practical DFA minimization](Valmari12.pdf)" by Valmari (2011).  This algorithm is *O(n+m log m)* where *n* is the number of states and *m* the number of transitions.  This is further reduced to *O(n+m log n)* if we can assume the transitions are already sorted by label. The commonly know algorithm is *O(nk log n)* where *k* is the size of the alphabet.  Other more efficient algorithms use more memory.  See the paper for all the details on this.
 
-This project implements the algorithm in C++, C# and Rust in order evaluate Rust as compared to the other languages.
+This project implements the algorithm in C++, C# and Rust in order to evaluate Rust as compared to the other languages.
 
 ## Project Status: Sample Inactive
 This is sample code only and should not be used in production without extensive testing. This project is not currently being maintained and you should not expect any bug fixes or enhancements.
