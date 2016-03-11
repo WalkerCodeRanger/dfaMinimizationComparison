@@ -134,7 +134,7 @@ impl<'a> PartitionMarking<'a>
 	}
 
 	// The algorithm as written in C++ and C# relies on the fact that you can mark nodes and they
-	// will be added to this the iterator returned by marked_in_set().  Of course, Rust borrow checker
+	// will be added to the iterator returned by marked_in_set().  Of course, Rust borrow checker
 	// makes that essentially impossible.  So here we have implemented our own iterator that that has
 	// a mark method allowing us to safely mark elements while manually iterating.
 	pub fn marked_in_set_mut<'b>(&'b mut self, set: usize) -> PartitionMarkedSetIterator<'a, 'b>

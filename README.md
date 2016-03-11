@@ -3,8 +3,8 @@ This project implements the DFA minimization algorithm described in "[Fast brief
 
 This project implements the algorithm in C++, C# and Rust in order evaluate Rust as compared to the other languages.
 
-## Project Status: Sample Active (2016-02)
-This is under active development and is subject to frequent changes.  Furthermore, this is sample code only and should not be used in production without extensive testing.
+## Project Status: Sample Inactive
+This is sample code only and should not be used in production without extensive testing. This project is not currently being maintained and you should not expect any bug fixes or enhancements.
 
 ### Download and Use
 Clone this git repo. Compile solutions using Visual Studio 2015. Compile Rust project using cargo and Rust 1.6.0.  After compiling all versions, run test data in them using [RunAllTestData.bat](RunAllTestData.bat).
@@ -54,6 +54,7 @@ In Rust 1.6.0:
   * Can safely return immutable references to parts of a struct's internal structure
   * Strict typing with `usize` pushed me to good design, changing `Partition.set_of` into `Vec<Option<usize>>`
   * Able to implement safe memory/data structure reuse and sharing, for example of `PartitionMarks`
+  * Cargo and crates.io in the core
 
 **Cons:**
 
@@ -86,6 +87,7 @@ In Rust 1.6.0:
   * Function pointer `fn` types vs closure types `Fn`, `FnMut` and `FnOnce` are confusing. What is `FnBox`?
   * A type parameter `F : FnMut(X) -> Y` can be passed a closure by value or mutable reference. This is really unintuitive coming from other languages, and there is nothing about the type name that implies it would work that way
   * Result of assignment expression should work for types implementing `Copy`
+  * For a language focused on "Zero Cost Abstractions", there is no documentation on the performance impact of various language features and API calls
 
 #### Returning iterators
 In several places I wanted to return an iterator from a function (for example in `PartitionMarking.marked`).  This is something I do quite commonly in C#.  There appear to be several language limitations that are interacting poorly to make this very difficult.  I can't honestly say I understand all the issues.  However, there is discussion on stack overflow [here](http://stackoverflow.com/questions/31904842/return-a-map-iterator-which-is-using-a-closure-in-rust) and [here](http://stackoverflow.com/questions/27646925/how-do-i-return-a-filter-iterator-from-a-function).  The accepted work around seems to be to return a `Box<Iterator<...>...>`.  That of course introduces extra heap allocation and pointers.  At first, I wasn't even able to get that solution working due to lifetime issues.  I ended up `.collect()`ing the values into a `Vec<usize>` and returning that.  Which is apparently a common though even uglier workaround.  Eventually, I somehow got the lifetime issues worked out and am now using the box solution.  It seems one of the [issues](https://github.com/rust-lang/rfcs/issues/518) is that there is no way to return an "abstract" type from a function.  So it becomes necessary to return a very specific concrete type of iterator that then leaks information about the implementation of your function.  There is an [RFC](https://github.com/Kimundi/rfcs/blob/function_output_type_parameters/text/0000-function_output_type_parameters.md) and [pull request](https://github.com/rust-lang/rfcs/pull/1305) on this.  The other problem seems to revolve around the complexities of the lifetimes necessary for this to work. From my perspective, this is a huge hole in the functionality of the Rust language at this time.
