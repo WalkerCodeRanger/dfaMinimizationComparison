@@ -17,7 +17,7 @@ This project implements a [DFA minimization algorithm](Valmari12.pdf) in C++, C#
   3. [C#](CSharp/CSharp/)
   4. [Rust](Rust/src/)
 
-All versions accept input on the console in the [input format](dfaFormat.md) used by the original version from the paper and write their results to the console in the same version.  [Sample DFA files](TestData/) are included in the project.
+All versions accept input on the console in the [input format](dfaFormat.md) used by the original version from the paper and write their results to the console in the same format.  [Sample DFA files](TestData/) are included in the project.
 
 ## Commentary on Languages
 
