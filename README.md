@@ -1,4 +1,4 @@
-# Comparison of DFA minimization algorithm in C++, C# and Rust
+# Comparison of DFA minimization algorithm in Rust to C# and C++
 
 This project implements the DFA minimization algorithm described in "[Fast brief practical DFA minimization](Valmari12.pdf)" by Valmari (2011). This algorithm is *O(n+m log m)* where *n* is the number of states and *m* the number of transitions. This is further reduced to *O(n+m log n)* if we can assume the transitions are already sorted by label. The commonly known algorithm is *O(nk log n)* where *k* is the size of the alphabet. Other more efficient algorithms use more memory. See the paper for all the details on this.
 
@@ -105,7 +105,7 @@ The difference between these types is confusing. It is often unclear when to use
 
 The lifetime of a local variable extends until the end of its scope regardless of the last usage. It might be nice if the Rust compiler could infer that in some situations the lifetime of a variable or borrow could be shorter to allow reuse without introducing explicit scopes. For example, in [read_dfa()](Rust/src/main.rs), the read buffer is split into the `header`. The header is then parsed into four integer values. At that point, the header is no longer used and nothing is holding a reference to it. However, when the read of the transitions went to reuse the `buffer`, it couldn't because the `header` split was still holding a borrow on the `buffer`. It would be evident to a developer that `header` was no longer used and it should be safe to reuse the `buffer` at that point. Instead, it was necessary to introduce a scope using curly braces to make it clear to the compiler when `header` should go out of scope.
 
-I can see some reasons why it works the way it does. The current behaviour makes it very clear and explicit when things go out of scope. That may matter when something implements the drop trait. It also avoids any developer surprise.
+I can see some reasons why it works the way it does. The current behavior makes it very clear and explicit when things go out of scope. That may matter when something implements the drop trait. It also avoids any developer surprise.
 
 #### Lifetimes in Same Line
 
