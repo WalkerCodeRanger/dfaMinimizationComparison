@@ -12,7 +12,9 @@ The header consists of a single line of four space separated non-negative intege
 
 For example, a DFA with 5 states, 6 transitions, initial state 0 and 2 final states would have the header:
 
-	5 6 0 2
+```
+5 6 0 2
+```
 
 ## Transitions
 
@@ -20,7 +22,9 @@ The transitions sections consists of a number of transition lines equal to the n
 
 For example, a transition from state 1 to state 3 on input 2 would be:
 
-	1 2 3
+```
+1 2 3
+```
 
 ## Final States
 
@@ -28,7 +32,9 @@ The final states section consists of a number of final state lines equal to the 
 
 For example, if state 3 is final, that would be simply:
 
-	3
+```
+3
+```
 
 ## Notes
 
@@ -38,12 +44,14 @@ The order of transitions and final states is not important.  However, a mismatch
 
 A small sample DFA is given in [TestData/Sample.dfa](TestData/Sample.dfa).  The contents of which are also reproduced below for reference.
 
-	5 6 0 2
-	0 0 1
-	0 1 2
-	1 2 3
-	2 2 3
-	1 3 4
-	2 3 4
-	3
-	4
+```
+5 6 0 2
+0 0 1
+0 1 2
+1 2 3
+2 2 3
+1 3 4
+2 3 4
+3
+4
+```

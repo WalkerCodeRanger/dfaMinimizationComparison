@@ -249,12 +249,12 @@ impl<'a> PartitionMarking<'a>
 
 		// Create sets for each partition
 		p.first.push(0); // The first set starts at 0
-		let mut current_partition = partition(&0);
+		let mut current_partition = partition(&0); // TODO shouldn't this be partition(p.elements[0])?
 		for (i, &element) in p.elements.iter().enumerate()
 		{
-			if partition(&i) != current_partition
+			if partition(&i) != current_partition // TODO shouldn't this be partition(element)?
 			{
-				current_partition = partition(&i);
+				current_partition = partition(&i); // TODO shouldn't this be partition(element)?
 				p.past.push(i);
 				p.set_count += 1;
 				p.first.push(i);

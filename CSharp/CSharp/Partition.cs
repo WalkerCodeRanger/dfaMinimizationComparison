@@ -19,7 +19,7 @@ namespace DfaMinComparisonCSharp.CSharp
 		private readonly int[] first; // F[s] the first element of set s
 		private readonly int[] past; // P[s] the element past the end of set s
 
-		// For simplicity we do not share the next to data structures
+		// For simplicity we do not share the next two data structures
 		private readonly int[] marked; // M[s] the number of marked elements in set s
 		private readonly List<int> touched; // W touched (i.e. contain marked) sets, replaces W[] and w in the paper
 
